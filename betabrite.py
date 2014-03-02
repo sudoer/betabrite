@@ -13,7 +13,8 @@ import re
 
 ledSerialPort = None
 twitterApi = None
-twitterUser = None
+class preferences:
+    pass
 
 #-------------------------------------------------------------------------------
 #   T W I T T E R   S T U F F
@@ -21,7 +22,7 @@ twitterUser = None
 
 def twitterInit():
     global twitterApi
-    global twitterUser
+    global preferences
     config = ConfigParser.RawConfigParser()
     config.read('settings.cfg')
     # http://dev.twitter.com/apps/myappid
@@ -30,27 +31,33 @@ def twitterInit():
     CONSUMER_SECRET = config.get('Twitter OAuth', 'CONSUMER_SECRET')
     ACCESS_TOKEN_KEY = config.get('Twitter OAuth', 'ACCESS_TOKEN_KEY')
     ACCESS_TOKEN_SECRET = config.get('Twitter OAuth', 'ACCESS_TOKEN_SECRET')
-    TWITTER_USER = config.get('Twitter feed', 'TWITTER_USER')
+    preferences.TWITTER_USER = config.get('preferences', 'TWITTER_USER')
+    preferences.MY_TWEETS = config.get('preferences', 'MY_TWEETS')
+    preferences.OTHER_TWEETS = config.get('preferences', 'OTHER_TWEETS')
 
     twitterAuth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     twitterAuth.set_access_token(ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET)
     twitterApi = tweepy.API(twitterAuth, secure=True)
-    twitterUser = twitterApi.get_user(TWITTER_USER)
-    # Display basic details for twitter user name
-    ## print (" ")
-    ## print ("Basic information for", twitterUser.name)
-    ## print ("Screen Name:", twitterUser.screen_name)
-    ## print ("Name: ", twitterUser.name)
-    ## print ("Twitter Unique ID: ", twitterUser.id)
-    ## print ("Account created at: ", twitterUser.created_at)
 
 def twitterGetUserTweets(i):
     global twitterApi
-    return twitterApi.user_timeline(screen_name=twitterUser, include_rts=True, count=i)
+    global preferences
+    twitterUserObj = twitterApi.get_user(preferences.TWITTER_USER)
+    return twitterApi.user_timeline(screen_name=twitterUserObj, include_rts=True, count=i)
 
 def twitterGetHomeTweets(i):
     global twitterApi
-    return  twitterApi.home_timeline(screen_name=twitterUser, include_rts=True, count=i)
+    global preferences
+    twitterUserObj = twitterApi.get_user(preferences.TWITTER_USER)
+    return  twitterApi.home_timeline(screen_name=twitterUserObj, include_rts=True, count=i)
+
+    # Display basic details for twitter user name
+    ## print (" ")
+    ## print ("Basic information for", twitterUserObj.name)
+    ## print ("Screen Name:", twitterUserObj.screen_name)
+    ## print ("Name: ", twitterUserObj.name)
+    ## print ("Twitter Unique ID: ", twitterUserObj.id)
+    ## print ("Account created at: ", twitterUserObj.created_at)
 
         # print ("ID:", tweet.id)
         # print ("User ID:", tweet.user.id)
@@ -58,7 +65,7 @@ def twitterGetHomeTweets(i):
         # print ("Created:", tweet.created_at)
         # print ("Geo:", tweet.geo)
         # print ("Contributors:", tweet.contributors)
-        # print ("Coordinates:", tweet.coordinates) 
+        # print ("Coordinates:", tweet.coordinates)
         # print ("Favorited:", tweet.favorited)
         # print ("In reply to screen name:", tweet.in_reply_to_screen_name)
         # print ("In reply to status ID:", tweet.in_reply_to_status_id)
@@ -201,52 +208,59 @@ def sanitizeTweet(before):
 #   M A I N   L O O P
 #-------------------------------------------------------------------------------
 
-ledInit()
+def main():
 
-while True:
+    global preferences
+    ledInit()
 
-    # TIME OF DAY
+    while True:
 
-    timeOfDay=datetime.datetime.now().strftime('%m-%d %H:%M:%S')
-    print("TIME >> "+timeOfDay)
-    ledDisplay(LedDisplayMode.HOLD, LedColor.RED+timeOfDay)
-    time.sleep(5)
+        # TIME OF DAY
 
-    # look up Twitter stuff
-    try:
-        twitterInit()
-        twitterUserTimeline = twitterGetUserTweets(5)
-        twitterHomeTimeline = twitterGetHomeTweets(15)
-    except tweep.error.TweepError:
-        twitterUserTimeline = ()
-        twitterHomeTimeline = ()
-        pass
+        timeOfDay=datetime.datetime.now().strftime('%m-%d %H:%M:%S')
+        print("TIME >> "+timeOfDay)
+        ledDisplay(LedDisplayMode.HOLD, LedColor.RED+timeOfDay)
+        time.sleep(5)
 
-    # MY TWEETS
+        # look up Twitter stuff
+        try:
+            twitterInit()
+            twitterUserTimeline = twitterGetUserTweets(preferences.MY_TWEETS)
+            twitterHomeTimeline = twitterGetHomeTweets(preferences.OTHER_TWEETS)
+        except tweepy.error.TweepError:
+            twitterUserTimeline = ()
+            twitterHomeTimeline = ()
+            pass
 
-    for tweet in reversed(twitterUserTimeline):
-        timeStamp = utc_to_local_datetime(tweet.created_at).strftime('%a %H:%M')
-        tweetText = sanitizeTweet(tweet.text)
-        print("MY TWEET >> ("+timeStamp+") "+tweetText)
-        # RED GREEN AMBER DIMRED DIMGREEN BROWN ORANGE YELLOW RAINBOW1 RAINBOW2 MIXED 
-        ledDisplay(LedDisplayMode.COMPRESSED_ROTATE,
-            LedColor.RED+timeStamp+' '+
-            LedColor.YELLOW+tweetText)
-        time.sleep(15)
+        # MY TWEETS
 
-    # OTHERS' TWEETS
+        for tweet in reversed(twitterUserTimeline):
+            timeStamp = utc_to_local_datetime(tweet.created_at).strftime('%a %H:%M')
+            tweetText = sanitizeTweet(tweet.text)
+            print("MY TWEET >> ("+timeStamp+") "+tweetText)
+            # RED GREEN AMBER DIMRED DIMGREEN BROWN ORANGE YELLOW RAINBOW1 RAINBOW2 MIXED
+            ledDisplay(LedDisplayMode.COMPRESSED_ROTATE,
+                LedColor.RED+timeStamp+' '+
+                LedColor.YELLOW+tweetText)
+            time.sleep(15)
 
-    for tweet in reversed(twitterHomeTimeline):
-        timeStamp = utc_to_local_datetime(tweet.created_at).strftime('%a %H:%M')
-        tweetText = sanitizeTweet(tweet.text)
-        print("PEER TWEET >> ("+timeStamp+") "+tweet.user.name+": "+tweetText)
-        # RED GREEN AMBER DIMRED DIMGREEN BROWN ORANGE YELLOW RAINBOW1 RAINBOW2 MIXED 
-        ledDisplay(LedDisplayMode.COMPRESSED_ROTATE,
-            LedColor.RED+timeStamp+' '+
-            LedColor.ORANGE+tweet.user.name+': '+
-            LedColor.GREEN+tweetText)
-        time.sleep(15)
+        # OTHERS' TWEETS
 
-ledSerialPort.close()
+        for tweet in reversed(twitterHomeTimeline):
+            timeStamp = utc_to_local_datetime(tweet.created_at).strftime('%a %H:%M')
+            tweetText = sanitizeTweet(tweet.text)
+            print("PEER TWEET >> ("+timeStamp+") "+tweet.user.name+": "+tweetText)
+            # RED GREEN AMBER DIMRED DIMGREEN BROWN ORANGE YELLOW RAINBOW1 RAINBOW2 MIXED
+            ledDisplay(LedDisplayMode.COMPRESSED_ROTATE,
+                LedColor.RED+timeStamp+' '+
+                LedColor.ORANGE+tweet.user.name+': '+
+                LedColor.GREEN+tweetText)
+            time.sleep(15)
 
+    ledSerialPort.close()
+
+#-------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    main()
 
