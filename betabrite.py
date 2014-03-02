@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf8 -*-
 
 import serial
 import datetime
@@ -191,13 +192,14 @@ def sanitizeTweet(before):
     after = re.sub('https?://[^ ]*','[LINK]', after)
     after = re.sub('&gt;','>', after)
     after = re.sub('&lt;','<', after)
+    after = re.sub('&amp;','&', after)
     after = re.sub('\n',' ', after)
-    after = re.sub('\xb0','*', after)      # degree symbol
-    after = re.sub('\xe9','e', after)      # accented e
-    after = re.sub(u'\u2019',"'", after)   # apostrophe
-    after = re.sub(u'\u2026','...', after)  # ellipsis
-    after = re.sub(u'\u201c','"', after)    # smart quote
-    after = re.sub(u'\u201d','"', after)    # smart quote
+    after = re.sub('\xb0','*', after)       # degree symbol (°)
+    after = re.sub('\xe9','e', after)       # accented e (é)
+    after = re.sub(u'\u2019',"'", after)    # right single quotation mark (’)
+    after = re.sub(u'\u2026','...', after)  # ellipsis (…)
+    after = re.sub(u'\u201c','"', after)    # left double quotation mark (“)
+    after = re.sub(u'\u201d','"', after)    # right double quotation mark (”)
     return after
 
 def displayFeedback(msgType,detail):
