@@ -136,29 +136,23 @@ def ledInit():
     global ledSerialPort
     ledSerialPort = serial.Serial("/dev/ttyS0", baudrate=9600, timeout=1.0)
 
-def ledSerialSend(string):
+def ledSerialSend(rawData):
     global ledSerialPort
-    serial=''
-    for ch in list(string):
+    # scrub any remaining unicode or high-ASCII characters
+    scrubbedData=''
+    for ch in list(rawData):
         try:
-            if (ord(ch) >= 32 and ord(ch) <= 127):
-                #DEBUG sys.stdout.write(ch)  # no newline
-                serial += ch
-            elif (ord(ch) < 32):
-                #DEBUG sys.stdout.write('<'+('%02x'%ord(ch))+'>')  # no newline
-                serial += ch
+            if (ord(ch) <= 127):
+                scrubbedData += ch
             else:
-                #DEBUG sys.stdout.write('<'+ch.encode('utf_8')+'>')  # no newline
-                serial += '?'
+                scrubbedData += chr(127)
         except UnicodeDecodeError:
-            #DEBUG sys.stdout.write('UU')  # no newline
+            scrubbedData += '?'
             pass
+    ledSerialPort.write(scrubbedData)
 
-    ledSerialPort.write(serial)
 
 def ledDisplay(displayMode,message):
-    #DEBUG print('DISPLAY >> '+message)
-    #DEBUG sys.stdout.write('SERIAL >> ')  # no newline
     # 5-20 NULs to clear the line
     ledSerialSend('\000\000\000\000\000\000\000\000\000\000')
     # SOH = "start of heading" = 0x01
@@ -175,7 +169,6 @@ def ledDisplay(displayMode,message):
     ledSerialSend(message)
     # EOT = "end of transmission" = 0x04
     ledSerialSend('\004')
-    #DEBUG print('')
 
 #-------------------------------------------------------------------------------
 #   U T I L I T I E S
@@ -193,16 +186,22 @@ def utc_to_local_datetime( utc_datetime ):
 
 def sanitizeTweet(before):
     after = before
+    # search/replace regexes
+    after = re.sub('https?://pic\.twitter\.com/[^ ]*','[IMG]', after)
     after = re.sub('https?://[^ ]*','[LINK]', after)
     after = re.sub('&gt;','>', after)
     after = re.sub('&lt;','<', after)
     after = re.sub('\n',' ', after)
-    after = re.sub('\xb0','*', after)
-    after = re.sub(u'\u2019',"'", after)
-    after = re.sub(u'\u2026','...', after)
-    after = re.sub(u'\u201c','"', after)
-    after = re.sub(u'\u201d','"', after)
+    after = re.sub('\xb0','*', after)      # degree symbol
+    after = re.sub('\xe9','e', after)      # accented e
+    after = re.sub(u'\u2019',"'", after)   # apostrophe
+    after = re.sub(u'\u2026','...', after)  # ellipsis
+    after = re.sub(u'\u201c','"', after)    # smart quote
+    after = re.sub(u'\u201d','"', after)    # smart quote
     return after
+
+def displayFeedback(msgType,detail):
+    print(msgType+" >> "+detail)
 
 #-------------------------------------------------------------------------------
 #   M A I N   L O O P
@@ -218,7 +217,7 @@ def main():
         # TIME OF DAY
 
         timeOfDay=datetime.datetime.now().strftime('%m-%d %H:%M:%S')
-        print("TIME >> "+timeOfDay)
+        displayFeedback('TIME',timeOfDay)
         ledDisplay(LedDisplayMode.HOLD, LedColor.RED+timeOfDay)
         time.sleep(5)
 
@@ -237,19 +236,25 @@ def main():
         for tweet in reversed(twitterUserTimeline):
             timeStamp = utc_to_local_datetime(tweet.created_at).strftime('%a %H:%M')
             tweetText = sanitizeTweet(tweet.text)
-            print("MY TWEET >> ("+timeStamp+") "+tweetText)
+            displayFeedback('MY TWEET', '('+timeStamp+') '+tweetText)
             # RED GREEN AMBER DIMRED DIMGREEN BROWN ORANGE YELLOW RAINBOW1 RAINBOW2 MIXED
             ledDisplay(LedDisplayMode.COMPRESSED_ROTATE,
                 LedColor.RED+timeStamp+' '+
                 LedColor.YELLOW+tweetText)
             time.sleep(15)
 
+        # INTERMISSION
+
+        displayFeedback('SLOT MACHINE','')
+        ledDisplay(LedDisplayMode.SLOT_MACHINE, '')
+        time.sleep(5)
+
         # OTHERS' TWEETS
 
         for tweet in reversed(twitterHomeTimeline):
             timeStamp = utc_to_local_datetime(tweet.created_at).strftime('%a %H:%M')
             tweetText = sanitizeTweet(tweet.text)
-            print("PEER TWEET >> ("+timeStamp+") "+tweet.user.name+": "+tweetText)
+            displayFeedback('PEER TWEET', '('+timeStamp+') '+tweet.user.name+': '+tweetText)
             # RED GREEN AMBER DIMRED DIMGREEN BROWN ORANGE YELLOW RAINBOW1 RAINBOW2 MIXED
             ledDisplay(LedDisplayMode.COMPRESSED_ROTATE,
                 LedColor.RED+timeStamp+' '+
@@ -257,6 +262,7 @@ def main():
                 LedColor.GREEN+tweetText)
             time.sleep(15)
 
+    # we never get here
     ledSerialPort.close()
 
 #-------------------------------------------------------------------------------
