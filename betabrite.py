@@ -9,6 +9,9 @@ import ConfigParser
 import tweepy
 import sys
 import re
+import os
+from pprint import pprint
+import urllib
 
 # GLOBALS
 
@@ -223,12 +226,47 @@ def main():
         ledDisplay(LedDisplayMode.HOLD, LedColor.RED+timeOfDay)
         time.sleep(5)
 
+        # GARAGE DOOR
+
+        fname = os.environ['HOME']+'/var/lib/garage.info'
+        with open(fname) as f:
+            content = f.readlines()
+        doorState = '???'
+        for line in content:
+            line = line.rstrip('\n')
+            if (line == 'DOOR=OPEN'):
+                doorState = 'open'
+            elif (line == 'DOOR=CLOSED'):
+                doorState = 'closed'
+        displayFeedback('DOOR',doorState)
+        ledDisplay(LedDisplayMode.HOLD, LedColor.BROWN+'garage '+doorState)
+        time.sleep(5)
+
+        # FLASHBACK
+        fname = '/tmp/betabrite.'+str(os.getpid())
+        urllib.urlretrieve("http://pogo/status.txt", filename=fname)
+        with open(fname) as f:
+            content = f.readlines()
+        kvpairs = dict(line.rstrip('\n').split('=') for line in content)
+        fbStatus = re.sub('_', ' ', kvpairs['status'])
+        fbTarget = kvpairs['target']
+        fbWait = kvpairs['wait']
+        if (fbWait != '0'):
+            fbStatus += ' '+fbWait
+        displayFeedback('FLASHBACK',fbStatus+' '+fbTarget)
+        ledDisplay(LedDisplayMode.ROTATE,
+            LedColor.GREEN+'flashback: '+
+            LedColor.YELLOW+fbStatus+' '+
+            LedColor.ORANGE+fbTarget)
+        time.sleep(10)
+
         # look up Twitter stuff
         try:
             twitterInit()
             twitterUserTimeline = twitterGetUserTweets(preferences.MY_TWEETS)
             twitterHomeTimeline = twitterGetHomeTweets(preferences.OTHER_TWEETS)
-        except tweepy.error.TweepError:
+        except tweepy.error.TweepError as e:
+            print "TWITTER !!! Tweepy error %d: %s" % (e.response.status, e.response.reason)
             twitterUserTimeline = ()
             twitterHomeTimeline = ()
             pass
