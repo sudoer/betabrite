@@ -47,13 +47,13 @@ def twitterGetUserTweets(i):
     global twitterApi
     global preferences
     twitterUserObj = twitterApi.get_user(preferences.TWITTER_USER)
-    return twitterApi.user_timeline(screen_name=twitterUserObj, include_rts=True, count=i)
+    return twitterApi.user_timeline(screen_name=preferences.TWITTER_USER, include_rts=True, count=i)
 
 def twitterGetHomeTweets(i):
     global twitterApi
     global preferences
     twitterUserObj = twitterApi.get_user(preferences.TWITTER_USER)
-    return  twitterApi.home_timeline(screen_name=twitterUserObj, include_rts=True, count=i)
+    return  twitterApi.home_timeline(screen_name=preferences.TWITTER_USER, include_rts=True, count=i)
 
     # Display basic details for twitter user name
     ## print (" ")
@@ -266,7 +266,12 @@ def main():
             twitterUserTimeline = twitterGetUserTweets(preferences.MY_TWEETS)
             twitterHomeTimeline = twitterGetHomeTweets(preferences.OTHER_TWEETS)
         except tweepy.error.TweepError as e:
-            print "TWITTER !!! Tweepy error %d: %s" % (e.response.status, e.response.reason)
+            response = e.response
+            if response != None:
+                errDetails = "%d: %s" % (e.response.status, e.response.reason)
+            else:
+                errDetails = "???"
+            print "TWITTER !!! Tweepy error "+errDetails
             twitterUserTimeline = ()
             twitterHomeTimeline = ()
             pass
