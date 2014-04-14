@@ -227,38 +227,44 @@ def main():
         time.sleep(5)
 
         # GARAGE DOOR
-
-        fname = os.environ['HOME']+'/var/lib/garage.info'
-        with open(fname) as f:
-            content = f.readlines()
-        doorState = '???'
-        for line in content:
-            line = line.rstrip('\n')
-            if (line == 'DOOR=OPEN'):
-                doorState = 'open'
-            elif (line == 'DOOR=CLOSED'):
-                doorState = 'closed'
-        displayFeedback('DOOR',doorState)
-        ledDisplay(LedDisplayMode.HOLD, LedColor.BROWN+'garage '+doorState)
-        time.sleep(5)
+        try:
+            fname = '/tmp/betabrite.'+str(os.getpid())
+            urllib.urlretrieve("http://garagepi/", filename=fname)
+            with open(fname) as f:
+                content = f.readlines()
+            doorState = '???'
+            for line in content:
+                line = line.rstrip('\n')
+                if (line == 'DOOR=OPEN'):
+                    doorState = 'open'
+                elif (line == 'DOOR=CLOSED'):
+                    doorState = 'closed'
+            displayFeedback('DOOR','garage '+doorState)
+            ledDisplay(LedDisplayMode.HOLD, LedColor.BROWN+'garage '+doorState)
+            time.sleep(5)
+        except:
+            pass
 
         # FLASHBACK
-        fname = '/tmp/betabrite.'+str(os.getpid())
-        urllib.urlretrieve("http://pogo/status.txt", filename=fname)
-        with open(fname) as f:
-            content = f.readlines()
-        kvpairs = dict(line.rstrip('\n').split('=') for line in content)
-        fbStatus = re.sub('_', ' ', kvpairs['status'])
-        fbTarget = kvpairs['target']
-        fbWait = kvpairs['wait']
-        if (fbWait != '0'):
-            fbStatus += ' '+fbWait
-        displayFeedback('FLASHBACK',fbStatus+' '+fbTarget)
-        ledDisplay(LedDisplayMode.ROTATE,
-            LedColor.GREEN+'flashback: '+
-            LedColor.YELLOW+fbStatus+' '+
-            LedColor.ORANGE+fbTarget)
-        time.sleep(10)
+        try:
+            fname = '/tmp/betabrite.'+str(os.getpid())
+            urllib.urlretrieve("http://pogo/status.txt", filename=fname)
+            with open(fname) as f:
+                content = f.readlines()
+            kvpairs = dict(line.rstrip('\n').split('=') for line in content)
+            fbStatus = re.sub('_', ' ', kvpairs['status'])
+            fbTarget = kvpairs['target']
+            fbWait = kvpairs['wait']
+            if (fbWait != '0'):
+                fbStatus += ' '+fbWait
+            displayFeedback('FLASHBACK',fbStatus+' '+fbTarget)
+            ledDisplay(LedDisplayMode.ROTATE,
+                LedColor.GREEN+'flashback: '+
+                LedColor.YELLOW+fbStatus+' '+
+                LedColor.ORANGE+fbTarget)
+            time.sleep(10)
+        except:
+            pass
 
         # look up Twitter stuff
         try:
@@ -313,5 +319,10 @@ def main():
 #-------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    main()
+    while True:
+        try:
+            main()
+        except:
+            print("* crash *")
+            time.sleep(5)
 
