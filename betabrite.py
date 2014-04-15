@@ -12,6 +12,8 @@ import re
 import os
 from pprint import pprint
 import urllib
+import traceback
+import unicodedata
 
 # GLOBALS
 
@@ -188,22 +190,30 @@ def utc_to_local_datetime( utc_datetime ):
     dt_args = time_struct[:6] + (delta.microseconds,)
     return datetime.datetime( *dt_args )
 
-def sanitizeTweet(before):
-    after = before
-    # search/replace regexes
-    after = re.sub('https?://pic\.twitter\.com/[^ ]*','[IMG]', after)
-    after = re.sub('https?://[^ ]*','[LINK]', after)
-    after = re.sub('&gt;','>', after)
-    after = re.sub('&lt;','<', after)
-    after = re.sub('&amp;','&', after)
-    after = re.sub('\n',' ', after)
-    after = re.sub('\xb0','*', after)       # degree symbol (°)
-    after = re.sub('\xe9','e', after)       # accented e (é)
-    after = re.sub(u'\u2019',"'", after)    # right single quotation mark (’)
-    after = re.sub(u'\u2026','...', after)  # ellipsis (…)
-    after = re.sub(u'\u201c','"', after)    # left double quotation mark (“)
-    after = re.sub(u'\u201d','"', after)    # right double quotation mark (”)
-    return after
+def sanitizeTweet(original):
+    unicodeStr = original
+    # Replace links with a place-holder.
+    unicodeStr = re.sub('https?://pic\.twitter\.com/[^ ]*','[IMG]', unicodeStr)
+    unicodeStr = re.sub('https?://[^ ]*','[LINK]', unicodeStr)
+    # Replace HTML markup with simple ASCII equivalents.
+    unicodeStr = re.sub('&gt;','>', unicodeStr)
+    unicodeStr = re.sub('&lt;','<', unicodeStr)
+    unicodeStr = re.sub('&amp;','&', unicodeStr)
+    unicodeStr = re.sub('\n',' ', unicodeStr)
+    # Replace specific unicode characters with ASCII equivalents.
+    unicodeStr = re.sub('\xb0','*', unicodeStr)       # degree symbol (°)
+    unicodeStr = re.sub('\xe9','e', unicodeStr)       # accented e (é)
+    unicodeStr = re.sub(u'\u2014',"-", unicodeStr)    # em-dash (—)
+    unicodeStr = re.sub(u'\u2019',"'", unicodeStr)    # right single quotation mark (’)
+    unicodeStr = re.sub(u'\u2026','...', unicodeStr)  # ellipsis (…)
+    unicodeStr = re.sub(u'\u201c','"', unicodeStr)    # left double quotation mark (“)
+    unicodeStr = re.sub(u'\u201d','"', unicodeStr)    # right double quotation mark (”)
+    # Finally, try to convert all unicode to their base ASCII characters, ignore what you can't convert.
+    # http://stackoverflow.com/questions/2365411/python-convert-unicode-to-ascii-without-errors
+    asciiStr = unicodedata.normalize('NFKD', unicodeStr).encode('ascii', 'ignore')   # see http://unicode.org/reports/tr15/
+    if asciiStr != unicodeStr:
+        print("unicode conversion > "+asciiStr)
+    return asciiStr
 
 def displayFeedback(msgType,detail):
     print(msgType+" >> "+detail)
@@ -323,6 +333,8 @@ if __name__ == "__main__":
         try:
             main()
         except:
-            print("* crash *")
+            print("CRASH: "+str(sys.exc_info()[0]))
+            tb = traceback.format_exc()
+            print(tb)
             time.sleep(5)
 
