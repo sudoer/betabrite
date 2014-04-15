@@ -37,9 +37,11 @@ def twitterInit():
     CONSUMER_SECRET = config.get('Twitter OAuth', 'CONSUMER_SECRET')
     ACCESS_TOKEN_KEY = config.get('Twitter OAuth', 'ACCESS_TOKEN_KEY')
     ACCESS_TOKEN_SECRET = config.get('Twitter OAuth', 'ACCESS_TOKEN_SECRET')
-    preferences.TWITTER_USER = config.get('preferences', 'TWITTER_USER')
-    preferences.MY_TWEETS = config.get('preferences', 'MY_TWEETS')
-    preferences.OTHER_TWEETS = config.get('preferences', 'OTHER_TWEETS')
+    preferences.twitter_user = config.get('preferences', 'twitter.user')
+    preferences.twitter_mine_count = int(config.get('preferences', 'twitter.mine.count'))
+    preferences.twitter_mine_delay = float(config.get('preferences', 'twitter.mine.delay'))
+    preferences.twitter_peer_count = int(config.get('preferences', 'twitter.peer.count'))
+    preferences.twitter_peer_delay = float(config.get('preferences', 'twitter.peer.delay'))
 
     twitterAuth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     twitterAuth.set_access_token(ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET)
@@ -48,14 +50,14 @@ def twitterInit():
 def twitterGetUserTweets(i):
     global twitterApi
     global preferences
-    twitterUserObj = twitterApi.get_user(preferences.TWITTER_USER)
-    return twitterApi.user_timeline(screen_name=preferences.TWITTER_USER, include_rts=True, count=i)
+    twitterUserObj = twitterApi.get_user(preferences.twitter_user)
+    return twitterApi.user_timeline(screen_name=preferences.twitter_user, include_rts=True, count=i)
 
 def twitterGetHomeTweets(i):
     global twitterApi
     global preferences
-    twitterUserObj = twitterApi.get_user(preferences.TWITTER_USER)
-    return  twitterApi.home_timeline(screen_name=preferences.TWITTER_USER, include_rts=True, count=i)
+    twitterUserObj = twitterApi.get_user(preferences.twitter_user)
+    return  twitterApi.home_timeline(screen_name=preferences.twitter_user, include_rts=True, count=i)
 
     # Display basic details for twitter user name
     ## print (" ")
@@ -204,6 +206,7 @@ def sanitizeTweet(original):
     unicodeStr = re.sub('\xb0','*', unicodeStr)       # degree symbol (°)
     unicodeStr = re.sub('\xe9','e', unicodeStr)       # accented e (é)
     unicodeStr = re.sub(u'\u2014',"-", unicodeStr)    # em-dash (—)
+    unicodeStr = re.sub(u'\u2018',"'", unicodeStr)    # left single quotation mark (‘)
     unicodeStr = re.sub(u'\u2019',"'", unicodeStr)    # right single quotation mark (’)
     unicodeStr = re.sub(u'\u2026','...', unicodeStr)  # ellipsis (…)
     unicodeStr = re.sub(u'\u201c','"', unicodeStr)    # left double quotation mark (“)
@@ -279,8 +282,8 @@ def main():
         # look up Twitter stuff
         try:
             twitterInit()
-            twitterUserTimeline = twitterGetUserTweets(preferences.MY_TWEETS)
-            twitterHomeTimeline = twitterGetHomeTweets(preferences.OTHER_TWEETS)
+            twitterUserTimeline = twitterGetUserTweets(preferences.twitter_mine_count)
+            twitterHomeTimeline = twitterGetHomeTweets(preferences.twitter_peer_count)
         except tweepy.error.TweepError as e:
             response = e.response
             if response != None:
@@ -302,7 +305,7 @@ def main():
             ledDisplay(LedDisplayMode.COMPRESSED_ROTATE,
                 LedColor.RED+timeStamp+' '+
                 LedColor.YELLOW+tweetText)
-            time.sleep(15)
+            time.sleep(preferences.twitter_mine_delay)
 
         # INTERMISSION
 
@@ -321,7 +324,7 @@ def main():
                 LedColor.RED+timeStamp+' '+
                 LedColor.ORANGE+tweet.user.name+': '+
                 LedColor.GREEN+tweetText)
-            time.sleep(15)
+            time.sleep(preferences.twitter_peer_delay)
 
     # we never get here
     ledSerialPort.close()
