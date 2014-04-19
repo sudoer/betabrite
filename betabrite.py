@@ -192,7 +192,7 @@ def utc_to_local_datetime( utc_datetime ):
     dt_args = time_struct[:6] + (delta.microseconds,)
     return datetime.datetime( *dt_args )
 
-def sanitizeTweet(original):
+def unicodeHtmlToAscii(original):
     unicodeStr = original
     # Replace links with a place-holder.
     unicodeStr = re.sub('https?://pic\.twitter\.com/[^ ]*','[IMG]', unicodeStr)
@@ -299,7 +299,7 @@ def main():
 
         for tweet in reversed(twitterUserTimeline):
             timeStamp = utc_to_local_datetime(tweet.created_at).strftime('%a %H:%M')
-            tweetText = sanitizeTweet(tweet.text)
+            tweetText = unicodeHtmlToAscii(tweet.text)
             displayFeedback('MY TWEET', '('+timeStamp+') '+tweetText)
             # RED GREEN AMBER DIMRED DIMGREEN BROWN ORANGE YELLOW RAINBOW1 RAINBOW2 MIXED
             ledDisplay(LedDisplayMode.COMPRESSED_ROTATE,
@@ -317,8 +317,9 @@ def main():
 
         for tweet in reversed(twitterHomeTimeline):
             timeStamp = utc_to_local_datetime(tweet.created_at).strftime('%a %H:%M')
-            tweetText = sanitizeTweet(tweet.text)
-            displayFeedback('PEER TWEET', '('+timeStamp+') '+tweet.user.name+': '+tweetText)
+            tweetUser = unicodeHtmlToAscii(tweet.user.name)
+            tweetText = unicodeHtmlToAscii(tweet.text)
+            displayFeedback('PEER TWEET', '('+timeStamp+') '+tweetUser+': '+tweetText)
             # RED GREEN AMBER DIMRED DIMGREEN BROWN ORANGE YELLOW RAINBOW1 RAINBOW2 MIXED
             ledDisplay(LedDisplayMode.COMPRESSED_ROTATE,
                 LedColor.RED+timeStamp+' '+
