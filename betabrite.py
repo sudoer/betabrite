@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf8 -*-
 
 import serial
@@ -14,6 +14,7 @@ from pprint import pprint
 import urllib
 import traceback
 import unicodedata
+import signal
 
 # GLOBALS
 
@@ -157,6 +158,8 @@ def ledSerialSend(rawData):
         except UnicodeDecodeError:
             scrubbedData += '?'
             pass
+        except:
+            raise
     ledSerialPort.write(scrubbedData)
 
 
@@ -255,8 +258,10 @@ def main():
             displayFeedback('DOOR','garage '+doorState)
             ledDisplay(LedDisplayMode.HOLD, LedColor.BROWN+'garage '+doorState)
             time.sleep(5)
+#       except SOMETHING:
+#           pass
         except:
-            pass
+            raise
 
         # FLASHBACK
         try:
@@ -276,8 +281,10 @@ def main():
                 LedColor.YELLOW+fbStatus+' '+
                 LedColor.ORANGE+fbTarget)
             time.sleep(10)
+#       except SOMETHING:
+#           pass
         except:
-            pass
+            raise
 
         # look up Twitter stuff
         try:
@@ -332,10 +339,21 @@ def main():
 
 #-------------------------------------------------------------------------------
 
+def signal_handler(signal, frame):
+    print('received HUP signal')
+    ledDisplay(LedDisplayMode.HOLD, '')
+    sys.exit(0)
+
+#-------------------------------------------------------------------------------
+
 if __name__ == "__main__":
+    signal.signal(signal.SIGHUP, signal_handler)
     while True:
         try:
             main()
+        except exceptions.SystemExit:
+            print('exiting')
+            raise
         except:
             print("CRASH: "+str(sys.exc_info()[0]))
             tb = traceback.format_exc()
