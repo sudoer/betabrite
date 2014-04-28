@@ -229,7 +229,8 @@ def unicodeHtmlToAscii(original):
     return asciiStr
 
 def displayFeedback(msgType,detail):
-    print(msgType+" >> "+detail)
+    logTime=datetime.datetime.now().strftime('%H:%M:%S')
+    print(logTime+' '+msgType+" >> "+detail)
 
 #-------------------------------------------------------------------------------
 #   M A I N   L O O P
