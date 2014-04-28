@@ -251,48 +251,54 @@ def main():
         time.sleep(5)
 
         # GARAGE DOOR
+        content = ''
         try:
             fname = '/tmp/betabrite.'+str(os.getpid())
             urllib.urlretrieve("http://garagepi/", filename=fname)
             with open(fname) as f:
                 content = f.readlines()
-            doorState = '???'
+        except IOError:
+            pass
+
+        doorState = '???'
+        if len(content) > 0:
             for line in content:
                 line = line.rstrip('\n')
                 if (line == 'DOOR=OPEN'):
                     doorState = 'open'
                 elif (line == 'DOOR=CLOSED'):
                     doorState = 'closed'
-            displayFeedback('DOOR','garage '+doorState)
-            ledDisplay(LedDisplayMode.HOLD, LedColor.BROWN+'garage '+doorState)
-            time.sleep(5)
-#       except SOMETHING:
-#           pass
-        except:
-            raise
+
+        displayFeedback('DOOR','garage '+doorState)
+        ledDisplay(LedDisplayMode.HOLD, LedColor.BROWN+'garage '+doorState)
+        time.sleep(5)
 
         # FLASHBACK
+        fname = '/tmp/betabrite.'+str(os.getpid())
+        content = ''
         try:
-            fname = '/tmp/betabrite.'+str(os.getpid())
             urllib.urlretrieve("http://pogo/status.txt", filename=fname)
             with open(fname) as f:
                 content = f.readlines()
+        except IOError:
+            pass
+
+        fbTarget = '???'
+        fbStatus = ''
+        if len(content) > 0:
             kvpairs = dict(line.rstrip('\n').split('=') for line in content)
             fbStatus = re.sub('_', ' ', kvpairs['status'])
             fbTarget = kvpairs['target']
             fbWait = kvpairs['wait']
             if (fbWait != '0'):
                 fbStatus += ' '+fbWait
-            displayFeedback('FLASHBACK',fbStatus+' '+fbTarget)
-            ledDisplay(LedDisplayMode.ROTATE,
-                LedColor.GREEN+'flashback: '+
-                LedColor.YELLOW+fbStatus+' '+
-                LedColor.ORANGE+fbTarget)
-            time.sleep(10)
-#       except SOMETHING:
-#           pass
-        except:
-            raise
+
+        displayFeedback('FLASHBACK',fbStatus+' '+fbTarget)
+        ledDisplay(LedDisplayMode.ROTATE,
+            LedColor.GREEN+'flashback: '+
+            LedColor.YELLOW+fbStatus+' '+
+            LedColor.ORANGE+fbTarget)
+        time.sleep(10)
 
         # look up Twitter stuff
         try:
