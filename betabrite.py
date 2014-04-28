@@ -314,6 +314,9 @@ def main():
             print "TWITTER !!! Tweepy error "+errDetails
             twitterUserTimeline = ()
             twitterHomeTimeline = ()
+            displayFeedback('PAUSE FOR TWITTER API RESET','60s')
+            ledDisplay(LedDisplayMode.SNOW, 'TWITTER ERROR')
+            time.sleep(60)
             pass
 
         # MY TWEETS
