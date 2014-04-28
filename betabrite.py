@@ -368,7 +368,7 @@ if __name__ == "__main__":
     while True:
         try:
             main()
-        except exceptions.SystemExit:
+        except SystemExit:
             print('exiting')
             raise
         except:
