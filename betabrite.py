@@ -302,6 +302,12 @@ def main():
             LedColor.ORANGE+fbTarget)
         time.sleep(10)
 
+        # INTERMISSION
+
+        displayFeedback('SLOT MACHINE','')
+        ledDisplay(LedDisplayMode.SLOT_MACHINE, '')
+        time.sleep(5)
+
         # LOOK UP TWITTER STUFF
 
         try:
@@ -360,9 +366,10 @@ def main():
 
         # INTERMISSION
 
-        displayFeedback('SLOT MACHINE','')
-        ledDisplay(LedDisplayMode.SLOT_MACHINE, '')
-        time.sleep(5)
+        if len(twitterHomeTimeline) > 0:
+            displayFeedback('SLOT MACHINE','')
+            ledDisplay(LedDisplayMode.SLOT_MACHINE, '')
+            time.sleep(5)
 
     # we never get here
     ledSerialPort.close()
