@@ -196,29 +196,36 @@ def utc_to_local_datetime( utc_datetime ):
     return datetime.datetime( *dt_args )
 
 def unicodeHtmlToAscii(original):
-    unicodeStr = original
+    # Get the input into Unicode format.
+    unicodeStr = u'';
+    if isinstance(original, unicode):
+        unicodeStr = original
+    if isinstance(original, str):
+        unicodeStr = unicode(original, 'utf-8')
     # Replace links with a place-holder.
-    unicodeStr = re.sub('https?://pic\.twitter\.com/[^ ]*','[IMG]', unicodeStr)
-    unicodeStr = re.sub('https?://[^ ]*','[LINK]', unicodeStr)
+    unicodeStr = re.sub(u'https?://pic\.twitter\.com/[^ ]*', u'[IMG]', unicodeStr)
+    unicodeStr = re.sub(u'https?://[^ ]*', u'[LINK]', unicodeStr)
     # Replace HTML markup with simple ASCII equivalents.
-    unicodeStr = re.sub('&gt;','>', unicodeStr)
-    unicodeStr = re.sub('&lt;','<', unicodeStr)
-    unicodeStr = re.sub('&amp;','&', unicodeStr)
-    unicodeStr = re.sub('\n',' ', unicodeStr)
+    unicodeStr = re.sub(u'&gt;', u'>', unicodeStr)
+    unicodeStr = re.sub(u'&lt;', u'<', unicodeStr)
+    unicodeStr = re.sub(u'&amp;', u'&', unicodeStr)
+    unicodeStr = re.sub(u'\n', u' ', unicodeStr)
     # Replace specific unicode characters with ASCII equivalents.
-    unicodeStr = re.sub('\xb0','*', unicodeStr)       # degree symbol (°)
-    unicodeStr = re.sub('\xe9','e', unicodeStr)       # accented e (é)
-    unicodeStr = re.sub(u'\u2014',"-", unicodeStr)    # em-dash (—)
-    unicodeStr = re.sub(u'\u2018',"'", unicodeStr)    # left single quotation mark (‘)
-    unicodeStr = re.sub(u'\u2019',"'", unicodeStr)    # right single quotation mark (’)
-    unicodeStr = re.sub(u'\u2026','...', unicodeStr)  # ellipsis (…)
-    unicodeStr = re.sub(u'\u201c','"', unicodeStr)    # left double quotation mark (“)
-    unicodeStr = re.sub(u'\u201d','"', unicodeStr)    # right double quotation mark (”)
+    unicodeStr = re.sub(u'\xb0', u'*', unicodeStr)       # degree symbol (°)
+    unicodeStr = re.sub(u'\xe9', u'e', unicodeStr)       # accented e (é)
+    unicodeStr = re.sub(u'\u2014', u"-", unicodeStr)    # em-dash (—)
+    unicodeStr = re.sub(u'\u2018', u"'", unicodeStr)    # left single quotation mark (‘)
+    unicodeStr = re.sub(u'\u2019', u"'", unicodeStr)    # right single quotation mark (’)
+    unicodeStr = re.sub(u'\u2026', u'...', unicodeStr)  # ellipsis (…)
+    unicodeStr = re.sub(u'\u201c', u'"', unicodeStr)    # left double quotation mark (“)
+    unicodeStr = re.sub(u'\u201d', u'"', unicodeStr)    # right double quotation mark (”)
+    unicodeStr = re.sub(u'\u262e', u'@', unicodeStr)    # peace (☮)
     # Finally, try to convert all unicode to their base ASCII characters, ignore what you can't convert.
     # http://stackoverflow.com/questions/2365411/python-convert-unicode-to-ascii-without-errors
-    asciiStr = unicodedata.normalize('NFKD', unicodeStr).encode('ascii', 'ignore')   # see http://unicode.org/reports/tr15/
-    if asciiStr != unicodeStr:
-        print("unicode conversion > "+asciiStr)
+    unicodeStr = unicodedata.normalize('NFKD', unicodeStr)   # see http://unicode.org/reports/tr15/
+    asciiStr = unicodeStr.encode('ascii', 'ignore')
+#   if asciiStr != unicodeStr:
+#       print("unicode conversion > "+asciiStr)
     return asciiStr
 
 def displayFeedback(msgType,detail):
