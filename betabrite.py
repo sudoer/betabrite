@@ -251,6 +251,7 @@ def main():
         time.sleep(5)
 
         # GARAGE DOOR
+
         content = ''
         try:
             fname = '/tmp/betabrite.'+str(os.getpid())
@@ -274,6 +275,7 @@ def main():
         time.sleep(5)
 
         # FLASHBACK
+
         fname = '/tmp/betabrite.'+str(os.getpid())
         content = ''
         try:
@@ -300,23 +302,27 @@ def main():
             LedColor.ORANGE+fbTarget)
         time.sleep(10)
 
-        # look up Twitter stuff
+        # LOOK UP TWITTER STUFF
+
         try:
             twitterInit()
             twitterUserTimeline = twitterGetUserTweets(preferences.twitter_mine_count)
             twitterHomeTimeline = twitterGetHomeTweets(preferences.twitter_peer_count)
         except tweepy.error.TweepError as e:
-            response = e.response
-            if response != None:
-                errDetails = "%d: %s" % (e.response.status, e.response.reason)
-            else:
-                errDetails = "???"
-            print "TWITTER !!! Tweepy error "+errDetails
+            # we did not get anything from Twitter, so don't show any messages
             twitterUserTimeline = ()
             twitterHomeTimeline = ()
-            displayFeedback('PAUSE FOR TWITTER API RESET','60s')
-            ledDisplay(LedDisplayMode.SNOW, 'TWITTER ERROR')
-            time.sleep(60)
+            # show some info about the error
+            response = e.response
+            status = 0
+            if response == None:
+                print "TWITTER !!! unknown Tweepy error"
+            else:
+                print "TWITTER !!! Tweepy error %d: %s" % (e.response.status, e.response.reason)
+                if e.response.status == 429:
+                    displayFeedback('PAUSE FOR TWITTER API RESET','60s')
+                    ledDisplay(LedDisplayMode.SNOW, 'TWITTER ERROR')
+                    time.sleep(60)
             pass
 
         # MY TWEETS
@@ -333,9 +339,10 @@ def main():
 
         # INTERMISSION
 
-        displayFeedback('SLOT MACHINE','')
-        ledDisplay(LedDisplayMode.SLOT_MACHINE, '')
-        time.sleep(5)
+        if len(twitterUserTimeline) > 0:
+            displayFeedback('SLOT MACHINE','')
+            ledDisplay(LedDisplayMode.SLOT_MACHINE, '')
+            time.sleep(5)
 
         # OTHERS' TWEETS
 
@@ -350,6 +357,12 @@ def main():
                 LedColor.ORANGE+tweet.user.name+': '+
                 LedColor.GREEN+tweetText)
             time.sleep(preferences.twitter_peer_delay)
+
+        # INTERMISSION
+
+        displayFeedback('SLOT MACHINE','')
+        ledDisplay(LedDisplayMode.SLOT_MACHINE, '')
+        time.sleep(5)
 
     # we never get here
     ledSerialPort.close()
