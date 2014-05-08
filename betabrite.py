@@ -293,13 +293,15 @@ def main():
             fbTarget = kvpairs['target']
             fbWait = kvpairs['wait']
             if (fbWait != '0'):
-                fbStatus += ' '+fbWait
+                fbStatus += ' ' + fbWait
+            fbDisk = kvpairs['disk.free.percent']+'% free'
 
         displayFeedback('FLASHBACK',fbStatus+' '+fbTarget)
         ledDisplay(LedDisplayMode.ROTATE,
             LedColor.GREEN+'flashback: '+
             LedColor.YELLOW+fbStatus+' '+
-            LedColor.ORANGE+fbTarget)
+            LedColor.ORANGE+fbTarget+' '+
+            LedColor.RED+fbDisk)
         time.sleep(10)
 
         # INTERMISSION
