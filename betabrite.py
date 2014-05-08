@@ -304,7 +304,7 @@ def main():
 
         # INTERMISSION
 
-        displayFeedback('SLOT MACHINE','')
+        displayFeedback('SLOT MACHINE','5s')
         ledDisplay(LedDisplayMode.SLOT_MACHINE, '')
         time.sleep(5)
 
@@ -346,7 +346,7 @@ def main():
         # INTERMISSION
 
         if len(twitterUserTimeline) > 0:
-            displayFeedback('SLOT MACHINE','')
+            displayFeedback('SLOT MACHINE','5s')
             ledDisplay(LedDisplayMode.SLOT_MACHINE, '')
             time.sleep(5)
 
@@ -367,7 +367,7 @@ def main():
         # INTERMISSION
 
         if len(twitterHomeTimeline) > 0:
-            displayFeedback('SLOT MACHINE','')
+            displayFeedback('SLOT MACHINE','5s')
             ledDisplay(LedDisplayMode.SLOT_MACHINE, '')
             time.sleep(5)
 
