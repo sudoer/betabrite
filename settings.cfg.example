@@ -1,0 +1,14 @@
+
+[Twitter OAuth]
+CONSUMER_KEY = ABCDEFGHIJKLMNOPQRSTUV
+CONSUMER_SECRET = ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnop
+ACCESS_TOKEN_KEY = 12345678-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmno
+ACCESS_TOKEN_SECRET = ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrs
+
+[preferences]
+twitter.user = twittername
+twitter.mine.count = 5
+twitter.mine.delay = 10
+twitter.peer.count = 20
+twitter.peer.delay = 15
+
