@@ -1,0 +1,12 @@
+
+This project relies on "tweepy", a Twitter library.
+
+It should be in a sibdirectory off of the main betabrite project.
+$ git clone https://github.com/tweepy/tweepy.git
+
+I am using revision 3941489.
+
+> commit 3941489457db86710b770bc120409d6947904afa
+> Author: Aaron Hill <aa1ronham@gmail.com>
+> Date:   Fri Feb 21 14:50:09 2014 -0500
+
